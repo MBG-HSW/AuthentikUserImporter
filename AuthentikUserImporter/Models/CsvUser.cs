@@ -8,5 +8,6 @@
         public string PhoneNumber { get; init; } = "";
         public bool Sms { get; init; } = false;
         public string Path { get; init; } = "users";
+        public bool EmailPasswordResetLink { get; init; } = true;
     }
 }

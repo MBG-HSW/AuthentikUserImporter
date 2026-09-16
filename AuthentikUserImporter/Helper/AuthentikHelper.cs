@@ -1,4 +1,5 @@
-﻿using AuthentikUserImporter.Models;
+﻿using AuthentikUserImporter.Exceptions;
+using AuthentikUserImporter.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

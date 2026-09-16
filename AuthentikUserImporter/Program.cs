@@ -1,4 +1,5 @@
 ﻿using AuthentikUserImporter.Helper;
+using AuthentikUserImporter.Models;
 
 namespace AuthentikUserImporter;
 
@@ -10,48 +11,133 @@ public class Program
         Console.WriteLine("║       Authentik CSV User Import Tool         ║");
         Console.WriteLine("╚══════════════════════════════════════════════╝");
         Console.WriteLine();
-        /*
-        if (args.Length == 0)
+
+        Configuration configuration = new Configuration();
+
+        AskForParameters(configuration);
+
+        await ExecuteImport(configuration);
+    }
+
+    static void AskForParameters(Configuration config)
+    {
+        config.CsvFilePath = ReadWithDefault("Enter the path to the CSV file", config.CsvFilePath);
+        config.AuthentikBaseUrl = ReadWithDefault("Enter the Authentik base URL", config.AuthentikBaseUrl);
+        config.AuthentikToken = ReadWithDefault("Enter the Authentik token", config.AuthentikToken);
+        config.AuthentikGroupId = ReadWithDefault("Enter the Authentik group ID", config.AuthentikGroupId);
+        config.EmailStageName = ReadWithDefault("Enter the email stage name", config.EmailStageName);
+
+        if (!ConfirmParameters())
         {
-            Console.WriteLine("No arguments provided. Please provide the required arguments.");
-            Console.WriteLine("Usage: AuthentikUserImporter <csvFilePath> <authentikBaseUrl> <authentikToken>");
-            return;
+            AskForParameters(config);
         }
-        if (args.Length < 3)
-        {
-            Console.WriteLine("Usage: AuthentikUserImporter <csvFilePath> <authentikBaseUrl> <authentikToken>");
-            return;
-        }*/
-        /*
-        var csvFilePath = args[0];
-        var authentikBaseUrl = args[1];
-        var authentikToken = args[2];
-        */
-        var csvFilePath = @"C:\Users\JosuaL\Desktop\benutzer_beispiel.csv";
-        var authentikBaseUrl = "https://auth.mbg-hsw.de";
-        var authentikToken = "hItI3H4SBTbabbhQ4fbgt3RqEQYQ6aX5q7bkvOo3AZnv8IlqeNOKMgUfJPoC";
+    }
+
+    static string ReadWithDefault(string prompt, string currentValue)
+    {
+        Console.Write($"{prompt} ({currentValue}): ");
+        var input = Console.ReadLine();
+        return string.IsNullOrWhiteSpace(input) ? currentValue : input;
+    }
+
+    static bool ConfirmParameters()
+    {
+        Console.Write("Do you want to proceed with these parameters? (y/n): ");
+        var input = Console.ReadLine();
+        return input?.ToLower() == "y";
+    }
+
+    static async Task ExecuteImport(Configuration config)
+    {
+        var results = new List<ImportResult>();
+
+        List<CsvUser> csvUsers;
         try
         {
-            var csvUsers = CsvHelper.ReadCsv(csvFilePath);
-            var httpClient = HttpHelper.BuildHttpClient(authentikBaseUrl, authentikToken);
-            foreach (var csvUser in csvUsers)
-            {
-                var user = new Models.User(csvUser);
-                Console.WriteLine($"Importing user: {user.FirstName} {user.LastName}");
-                while(await AuthentikHelper.UsernameExists(httpClient, user.Username))
-                {
-                    Console.WriteLine($"Username {user.Username} already exists. Suggesting a new username...");
-                    user.SuggestUsername();
-                }
-                user.Uuid = await AuthentikHelper.CreateUser(httpClient, user);
-                Console.WriteLine($"User {user.FirstName} {user.LastName} created with UUID: {user.Uuid} and Username {user.Username}");
-                AuthentikHelper.AddUserToGroup(httpClient, user.Uuid, "8ee1215d-f602-4ad3-a17b-15a78518c0d1").Wait();
-                AuthentikHelper.TriggerRecoveryEmail(httpClient, user.Uuid, "mbg-initial-password-set").Wait();
-            }
+            csvUsers = CsvHelper.ReadCsv(config.CsvFilePath);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"Fatal error reading CSV file: {ex.Message}");
+            return;
+        }
+
+        var httpClient = HttpHelper.BuildHttpClient(config.AuthentikBaseUrl, config.AuthentikToken);
+        Console.WriteLine();
+        Console.WriteLine($"Found {csvUsers.Count} user(s) in CSV. Starting import...");
+        Console.WriteLine();
+
+        int current = 0;
+        foreach (var csvUser in csvUsers)
+        {
+            current++;
+            var user = new User(csvUser);
+            Console.WriteLine($"[{current}/{csvUsers.Count}] Importing user: {user.FirstName} {user.LastName}");
+
+            try
+            {
+                while (await AuthentikHelper.UsernameExists(httpClient, user.Username))
+                {
+                    Console.WriteLine($"  Username {user.Username} already exists. Suggesting a new username...");
+                    user.SuggestUsername();
+                }
+
+                user.Uuid = await AuthentikHelper.CreateUser(httpClient, user);
+                Console.WriteLine($"  Created with UUID: {user.Uuid}, Username: {user.Username}");
+
+                await AuthentikHelper.AddUserToGroup(httpClient, user.Uuid, config.AuthentikGroupId);
+
+                if (user.EmailPasswordResetLink)
+                {
+                    await AuthentikHelper.TriggerRecoveryEmail(httpClient, user.Uuid, config.EmailStageName);
+                    Console.WriteLine("  Password reset email triggered.");
+                }
+
+                results.Add(ImportResult.Success(user));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"  Error importing {user.FirstName} {user.LastName}: {ex.Message}");
+                results.Add(ImportResult.Failure(user, ex.Message));
+            }
+
+            Console.WriteLine();
+        }
+
+        PrintSummary(results);
+    }
+
+    static void PrintSummary(List<ImportResult> results)
+    {
+        var successCount = results.Count(r => r.Succeeded);
+        var failureCount = results.Count - successCount;
+
+        Console.WriteLine("╔══════════════════════════════════════════════╗");
+        Console.WriteLine("║                   Summary                    ║");
+        Console.WriteLine("╚══════════════════════════════════════════════╝");
+        Console.WriteLine($"Total:   {results.Count}");
+        Console.WriteLine($"Success: {successCount}");
+        Console.WriteLine($"Failed:  {failureCount}");
+        Console.WriteLine();
+
+        if (successCount > 0)
+        {
+            Console.WriteLine("Successfully imported:");
+            foreach (var r in results.Where(r => r.Succeeded))
+            {
+                Console.WriteLine($"  - {r.User.FirstName} {r.User.LastName} (Username: {r.User.Username}, UUID: {r.User.Uuid})");
+            }
+            Console.WriteLine();
+        }
+
+        if (failureCount > 0)
+        {
+            Console.WriteLine("Failed imports:");
+            foreach (var r in results.Where(r => !r.Succeeded))
+            {
+                Console.WriteLine($"  - {r.User.FirstName} {r.User.LastName}: {r.ErrorMessage}");
+            }
+            Console.WriteLine();
         }
     }
 }

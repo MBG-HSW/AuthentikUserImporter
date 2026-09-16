@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace AuthentikUserImporter
+namespace AuthentikUserImporter.Exceptions
 {
     internal class AuthentikException : Exception
     {
