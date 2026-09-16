@@ -41,8 +41,6 @@ namespace AuthentikUserImporter.Helper
                 Console.Write($"[WARNUNG: Recovery-Mail nicht gesendet: {(int)mailResp.StatusCode}] ");
             }
         }
-
-        /// <summary>Löst den Namen einer Email-Stage zur zugehörigen UUID auf (mit Cache).</summary>
         static async Task<string> ResolveEmailStageId(HttpClient http, string name)
         {
             if (_emailStageCache.TryGetValue(name, out var cachedId))
@@ -65,10 +63,6 @@ namespace AuthentikUserImporter.Helper
             _emailStageCache[name] = id;
             return id;
         }
-
-        /// <summary>
-        /// Weist einen Benutzer einer Gruppe zu.
-        /// </summary>
         public static async Task AddUserToGroup(HttpClient http, string userId, string groupId)
         {
             var payload = new { pk = userId };
@@ -84,8 +78,6 @@ namespace AuthentikUserImporter.Helper
                 Console.Write($"[WARNUNG: Gruppe nicht zugewiesen: {body}] ");
             }
         }
-
-        /// <summary>Legt einen neuen Benutzer an und gibt seine UUID zurück.</summary>
         public static async Task<string> CreateUser(HttpClient http, User user)
         {
             var payload = new Dictionary<string, object?>

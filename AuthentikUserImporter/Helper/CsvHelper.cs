@@ -62,7 +62,6 @@ namespace AuthentikUserImporter.Helper
 
             return users;
         }
-
         static char DetectDelimiter(string headerLine)
         {
             // Zählt Kandidaten und nimmt den häufigsten
@@ -71,7 +70,6 @@ namespace AuthentikUserImporter.Helper
                 .OrderByDescending(c => headerLine.Count(ch => ch == c))
                 .First();
         }
-
         static string[] SplitCsv(string line, char delimiter)
         {
             var result = new List<string>();
@@ -87,6 +85,5 @@ namespace AuthentikUserImporter.Helper
             result.Add(current.ToString());
             return result.ToArray();
         }
-
     }
 }
