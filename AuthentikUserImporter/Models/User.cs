@@ -8,7 +8,7 @@ namespace AuthentikUserImporter.Models
     {
         public string Username { get; set; } = "";
         public int UsernameNumber { get; set; } = 0;
-        public string Uuid { get; set; }
+        public string Uuid { get; set; } = "";
 
         public User(CsvUser csvUser)
         {
@@ -17,6 +17,7 @@ namespace AuthentikUserImporter.Models
             Email = csvUser.Email;
             PhoneNumber = csvUser.PhoneNumber;
             Path = csvUser.Path;
+            Sms = csvUser.Sms;
             SuggestUsername();
         }
 

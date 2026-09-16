@@ -91,7 +91,7 @@ namespace AuthentikUserImporter.Helper
             {
                 ["username"] = user.Username,
                 ["email"] = user.Email,
-                ["name"] = $"{user.FirstName} {user.LastName}".Trim(),
+                ["name"] = $"{user.LastName}, {user.FirstName}".Trim(),
                 ["is_active"] = true,
                 ["path"] = user.Path,
                 ["password"] = null,
@@ -104,8 +104,9 @@ namespace AuthentikUserImporter.Helper
             {
                 attributes["phone_number"] = user.PhoneNumber;
             }
-            if (attributes.Count > 0)
-                payload["attributes"] = attributes;
+            attributes["sms"] = user.Sms;
+
+            payload["attributes"] = attributes;
 
             var json = JsonSerializer.Serialize(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
