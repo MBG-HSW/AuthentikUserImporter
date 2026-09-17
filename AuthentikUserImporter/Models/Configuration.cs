@@ -10,6 +10,7 @@ namespace AuthentikUserImporter.Models
         public string AuthentikBaseUrl { get; set; } = "https://auth.mbg-hsw.de";
         public string AuthentikToken { get; set; } = "";
         public string AuthentikGroupId { get; set; } = "";
+        public bool EmailPasswordResetLink { get; init; } = true;
         public string EmailStageName { get; set; } = "mbg-initial-password-set";
     }
 }

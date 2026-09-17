@@ -87,7 +87,7 @@ public class Program
 
                 await AuthentikHelper.AddUserToGroup(httpClient, user.Uuid, config.AuthentikGroupId);
 
-                if (user.EmailPasswordResetLink)
+                if (config.EmailPasswordResetLink)
                 {
                     await AuthentikHelper.TriggerRecoveryEmail(httpClient, user.Uuid, config.EmailStageName);
                     Console.WriteLine("  Password reset email triggered.");
