@@ -25,7 +25,9 @@ public class Program
         config.AuthentikBaseUrl = ReadWithDefault("Enter the Authentik base URL", config.AuthentikBaseUrl);
         config.AuthentikToken = ReadWithDefault("Enter the Authentik token", config.AuthentikToken);
         config.AuthentikGroupId = ReadWithDefault("Enter the Authentik group ID", config.AuthentikGroupId);
-        config.EmailStageName = ReadWithDefault("Enter the email stage name", config.EmailStageName);
+        config.EmailPasswordResetLink = bool.Parse(ReadWithDefault("Should the password reset link be sent via email? (true/false)", config.EmailPasswordResetLink.ToString()));
+        if (config.EmailPasswordResetLink)
+            config.EmailStageName = ReadWithDefault("Enter the email stage name", config.EmailStageName);
 
         if (!ConfirmParameters())
         {
