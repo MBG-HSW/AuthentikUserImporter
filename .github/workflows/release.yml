@@ -43,7 +43,17 @@ jobs:
           -p:IncludeNativeLibrariesForSelfExtract=true
           -o ./publish/${{ matrix.rid }}
 
-      - name: Zip artifact
+      - name: Zip artifact (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: >
+          Compress-Archive
+          -Path "./publish/${{ matrix.rid }}/*"
+          -DestinationPath "AuthentikUserImporter-${{ matrix.rid }}.zip"
+          -Force
+
+      - name: Zip artifact (Linux/macOS)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           cd ./publish/${{ matrix.rid }}
