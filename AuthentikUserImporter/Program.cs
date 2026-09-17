@@ -17,6 +17,9 @@ public class Program
         AskForParameters(configuration);
 
         await ExecuteImport(configuration);
+
+        Console.WriteLine("Press any key to exit...");
+        Console.ReadKey();
     }
 
     static void AskForParameters(Configuration config)
@@ -87,7 +90,10 @@ public class Program
                 user.Uuid = await AuthentikHelper.CreateUser(httpClient, user);
                 Console.WriteLine($"  Created with UUID: {user.Uuid}, Username: {user.Username}");
 
-                await AuthentikHelper.AddUserToGroup(httpClient, user.Uuid, config.AuthentikGroupId);
+                if (!string.IsNullOrEmpty(config.AuthentikGroupId))
+                { 
+                    await AuthentikHelper.AddUserToGroup(httpClient, user.Uuid, config.AuthentikGroupId);
+                }
 
                 if (config.EmailPasswordResetLink)
                 {
