@@ -1,19 +1,18 @@
-# Authentik CSV User Importer
+# Authentik User Importer
 
-Ein Kommandozeilen-Tool zum Massenimport von Benutzern aus einer CSV-Datei in [Authentik](https://goauthentik.io/). Legt Benutzer an, fügt sie einer Gruppe hinzu und kann optional automatisch eine Passwort-Reset-E-Mail auslösen.
+Ein CLI-Tool zum Massenimport von Benutzer:innen in [Authentik](https://goauthentik.io/) über eine CSV-Datei.
 
 ## Funktionen
 
-- 📄 Import von Benutzern aus einer CSV-Datei
-- 🔁 Automatische Konfliktauflösung bei bereits vergebenen Benutzernamen
-- 👥 Automatisches Hinzufügen zu einer Authentik-Gruppe
-- 📧 Optionaler Versand von Passwort-Reset-E-Mails
-- 📊 Zusammenfassung erfolgreicher und fehlgeschlagener Importe am Ende
-- ⚙️ Einzelne Fehler brechen den Gesamtimport nicht ab
+- Anlegen von Benutzern in Authentik anhand einer CSV-Liste
+- Automatische Vermeidung doppelter Benutzernamen (bei Konflikt wird ein alternativer Name vorgeschlagen)
+- Optionale Zuweisung zu einer Gruppe
+- Optionaler Versand einer E-Mail zum Setzen des Passworts
+- Abschließende Zusammenfassung mit erfolgreich angelegten und fehlgeschlagenen Einträgen
 
-## Download
+## Installation
 
-Fertige, lauffähige Programme (keine .NET-Installation nötig) findest du auf der [Releases-Seite](../../releases):
+Fertige Binaries stehen unter [Releases](../../releases) zum Download bereit:
 
 | Betriebssystem | Datei |
 |---|---|
@@ -21,77 +20,71 @@ Fertige, lauffähige Programme (keine .NET-Installation nötig) findest du auf d
 | Linux | `AuthentikUserImporter-linux-x64.zip` |
 | macOS | `AuthentikUserImporter-osx-x64.zip` |
 
-Zip-Datei entpacken und die enthaltene Programmdatei ausführen.
+Die ZIP-Datei entpacken; eine zusätzliche Installation ist nicht erforderlich.
+
+> **Hinweis (Windows):** Da die Binaries nicht signiert sind, kann beim ersten Start eine SmartScreen-Warnung erscheinen. Über „Weitere Informationen" → „Trotzdem ausführen" fortfahren.
 
 ## Voraussetzungen
 
-- Ein Authentik-Zugriffstoken mit Berechtigung zum Anlegen von Benutzern und Gruppenzuweisungen
-- Die ID der Zielgruppe in Authentik
-- Optional: Name der E-Mail-Stage, falls automatische Passwort-Reset-Mails verschickt werden sollen
-- Eine CSV-Datei mit den zu importierenden Benutzern
+Vor dem ersten Einsatz werden folgende Informationen benötigt:
+
+| Information | Beschreibung |
+|---|---|
+| Authentik-URL | Basis-URL der eigenen Authentik-Instanz, z. B. `https://auth.example.com` |
+| API-Token | Token mit ausreichender Berechtigung, erstellbar unter `/if/admin/#/core/tokens` |
+| Gruppen-ID | ID der Zielgruppe, sofern die Benutzer einer Gruppe zugeordnet werden sollen. Kann leer gelassen werden. |
+| E-Mail-Stage | Name der Stage für den Passwort-Recovery-Versand, falls automatisch E-Mails verschickt werden sollen |
+
+> **Hinweis:** Das API-Token ist sensibel und sollte wie ein Passwort behandelt werden.
 
 ## CSV-Format
 
-<!-- TODO: An das tatsächliche Format anpassen -->
+Die Eingabedatei ist semikolon-getrennt und enthält folgende Spalten:
+
 ```csv
-FirstName,LastName,Email,EmailPasswordResetLink
-Max,Mustermann,max.mustermann@example.com,true
+firstname;lastname;email;phonenumber;sms;path
+Max;Mustermann;max.mustermann@example.com;+491234567890;true;users
 ```
+
+| Spalte | Pflicht | Beschreibung |
+|---|---|---|
+| `firstname` | ja | Vorname |
+| `lastname` | ja | Nachname |
+| `email` | ja | E-Mail-Adresse |
+| `phonenumber` | nein | Telefonnummer |
+| `sms` | nein | `true`/`false` – Benachrichtigung per SMS. Standard: `false` |
+| `path` | nein | Pfad, unter dem der Benutzer in Authentik angelegt wird. Standard: `users` |
 
 ## Verwendung
 
-Programm starten:
+1. Programm starten (unter Linux/macOS ggf. über das Terminal)
+2. Das Tool fragt nacheinander nach:
+   - Pfad zur CSV-Datei
+   - Authentik-URL
+   - API-Token
+   - Gruppen-ID
+   - Name der E-Mail-Stage
+   - Ob Recovery-Links per E-Mail versendet werden sollen
+3. Bereits bekannte Werte werden in Klammern angezeigt; Enter ohne Eingabe übernimmt den angezeigten Wert
+4. Nach Eingabe aller Parameter wird eine Zusammenfassung angezeigt und um Bestätigung gebeten (`y`/`n`)
+5. Nach Bestätigung verarbeitet das Tool die Liste und zeigt den Fortschritt live an
+6. Am Ende erscheint eine Zusammenfassung mit Gesamtzahl, Erfolgen, Fehlern sowie den final vergebenen Benutzernamen
 
-```bash
-./AuthentikUserImporter
-```
+## FAQ
 
-Das Tool fragt interaktiv nach:
+**Was passiert, wenn ein Benutzername bereits existiert?**
+Das Tool erkennt dies automatisch und schlägt einen alternativen Benutzernamen vor, bis ein freier gefunden wird.
 
-1. Pfad zur CSV-Datei
-2. Authentik Base-URL (z. B. `https://auth.example.com`)
-3. Authentik API-Token
-4. Authentik Gruppen-ID
-5. Name der E-Mail-Stage (für Passwort-Reset-Mails)
+**Was passiert, wenn einzelne Benutzer fehlschlagen?**
+Der Import läuft für die übrigen Einträge weiter. Fehlgeschlagene Einträge werden in der Abschlusszusammenfassung mit Fehlermeldung aufgeführt.
 
-Bereits bekannte Werte werden in Klammern als Vorschlag angezeigt — einfach `Enter` drücken, um den vorgeschlagenen Wert zu übernehmen.
+**Kann ein abgebrochener Import fortgesetzt werden?**
+Aktuell nicht automatisch. Bereits erfolgreich angelegte Benutzer bleiben in Authentik bestehen und sollten vor einem erneuten Lauf aus der CSV-Liste entfernt werden, um doppelte Einträge zu vermeiden.
 
-Nach Eingabe aller Parameter wird eine Bestätigung angefordert, bevor der eigentliche Import startet.
+## Beitragen
 
-Am Ende des Imports zeigt das Tool eine Zusammenfassung mit erfolgreich angelegten Benutzern (inkl. UUID und finalem Benutzernamen) sowie ggf. aufgetretenen Fehlern an.
-
-## Aus dem Quellcode bauen
-
-Voraussetzung: [.NET 8 SDK](https://dotnet.microsoft.com/download)
-
-```bash
-git clone https://github.com/<org>/<repo>.git
-cd <repo>
-dotnet build
-dotnet run --project AuthentikUserImporter
-```
-
-Self-contained Binary selbst erstellen:
-
-```bash
-dotnet publish -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true
-```
-
-(`linux-x64` durch `win-x64` oder `osx-x64` ersetzen, je nach Zielsystem.)
-
-## Releases erstellen (für Maintainer)
-
-Neue Releases werden automatisch per GitHub Actions gebaut, sobald ein Tag im Format `vX.Y.Z` gepusht wird:
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-## Sicherheitshinweis
-
-Das Authentik-Token wird nur lokal in der laufenden Sitzung verwendet und nicht gespeichert oder übertragen. Trotzdem sollte das Token nur mit den minimal notwendigen Berechtigungen ausgestattet sein und nach Gebrauch bei Bedarf widerrufen werden.
+Fehler oder Verbesserungsvorschläge können gerne als [Issue](../../issues) gemeldet werden.
 
 ## Lizenz
 
-<!-- TODO: Lizenz ergänzen -->
+<!-- Lizenz hier ergänzen -->
