@@ -1,4 +1,4 @@
-﻿using AuthentikUserImporter.Exceptions;
+using AuthentikUserImporter.Exceptions;
 using AuthentikUserImporter.Models;
 using System;
 using System.Collections.Concurrent;
@@ -84,7 +84,7 @@ namespace AuthentikUserImporter.Helper
             {
                 ["username"] = user.Username,
                 ["email"] = user.Email,
-                ["name"] = $"{user.LastName}, {user.FirstName}".Trim(),
+                ["name"] = $"{user.LastName}, {user.FirstName}, MBG Harsewinkel".Trim(),
                 ["is_active"] = true,
                 ["path"] = user.Path,
                 ["password"] = null,
