@@ -56,7 +56,7 @@ namespace AuthentikUserImporter.Helper
                     LastName = Get(iLastName),
                     PhoneNumber = Get(iPhoneNumber),
                     Sms = Get(iSms).Equals("true", StringComparison.OrdinalIgnoreCase) || Get(iSms).Equals("1"),
-                    Path = Get(iPath).Length > 0 ? Get(iPath) : "users",
+                    Path = Get(iPath).Length > 0 ? Get(iPath) : "MBG Harsewinkel/Jugend",
                 });
             }
 
