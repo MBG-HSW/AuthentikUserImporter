@@ -1,4 +1,4 @@
-﻿namespace AuthentikUserImporter.Models
+namespace AuthentikUserImporter.Models
 {
     public class CsvUser
     {
@@ -7,6 +7,6 @@
         public string Email { get; init; } = "";
         public string PhoneNumber { get; init; } = "";
         public bool Sms { get; init; } = false;
-        public string Path { get; init; } = "users";
+        public string Path { get; init; } = "MBG Harsewinkel/Jugend";
     }
 }
