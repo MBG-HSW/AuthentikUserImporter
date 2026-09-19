@@ -84,11 +84,14 @@ namespace AuthentikUserImporter.Helper
             {
                 ["username"] = user.Username,
                 ["email"] = user.Email,
+                ["upn"] = user.Email,
                 ["name"] = $"{user.LastName}, {user.FirstName}, MBG Harsewinkel".Trim(),
+                ["given_name"] = user.FirstName,
+                ["family_name"] = user.LastName,
                 ["is_active"] = true,
                 ["path"] = user.Path,
                 ["password"] = null,
-                ["type"] = "internal",
+                ["type"] = "internal"
             };
 
             // Custom Attributes zusammenbauen (nur setzen, wenn Werte vorhanden sind)
