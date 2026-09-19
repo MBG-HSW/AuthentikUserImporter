@@ -84,10 +84,7 @@ namespace AuthentikUserImporter.Helper
             {
                 ["username"] = user.Username,
                 ["email"] = user.Email,
-                ["upn"] = user.Email,
                 ["name"] = $"{user.LastName}, {user.FirstName}, MBG Harsewinkel".Trim(),
-                ["given_name"] = user.FirstName,
-                ["family_name"] = user.LastName,
                 ["is_active"] = true,
                 ["path"] = user.Path,
                 ["password"] = null,
@@ -100,6 +97,9 @@ namespace AuthentikUserImporter.Helper
             {
                 attributes["phone_number"] = user.PhoneNumber;
             }
+            attributes["given_name"] = user.FirstName;
+            attributes["family_name"] = user.LastName;
+            attributes["upn"] = user.Email;
             attributes["sms"] = user.Sms;
 
             payload["attributes"] = attributes;
