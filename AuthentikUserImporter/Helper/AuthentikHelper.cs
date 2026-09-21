@@ -138,5 +138,17 @@ namespace AuthentikUserImporter.Helper
                 .GetInt32();
             return count > 0;
         }
+        public static async Task<bool> UpnExists(HttpClient http, string upn)
+        {
+            var response = await http.GetAsync($"/api/v3/core/users/?attributes__upn={Uri.EscapeDataString(upn)}");
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadAsStringAsync();
+            var doc = JsonDocument.Parse(result);
+            var count = doc.RootElement
+                .GetProperty("pagination")
+                .GetProperty("count")
+                .GetInt32();
+            return count > 0;
+        }
     }
 }

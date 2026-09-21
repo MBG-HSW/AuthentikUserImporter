@@ -87,6 +87,11 @@ public class Program
                     user.SuggestUsername();
                 }
 
+                if(await AuthentikHelper.UpnExists(httpClient, user.Email))
+                {
+                    throw new Exception($"UPN {user.Email} already exists in Authentik.");
+                }
+
                 user.Uuid = await AuthentikHelper.CreateUser(httpClient, user);
                 Console.WriteLine($"  Created with UUID: {user.Uuid}, Username: {user.Username}");
 
