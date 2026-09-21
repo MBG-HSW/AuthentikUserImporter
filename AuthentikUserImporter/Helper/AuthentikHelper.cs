@@ -144,11 +144,19 @@ namespace AuthentikUserImporter.Helper
             response.EnsureSuccessStatusCode();
             var result = await response.Content.ReadAsStringAsync();
             var doc = JsonDocument.Parse(result);
-            var count = doc.RootElement
-                .GetProperty("pagination")
-                .GetProperty("count")
-                .GetInt32();
-            return count > 0;
+            var results = doc.RootElement.GetProperty("results");
+
+            foreach (var user in results.EnumerateArray())
+            {
+                if (user.TryGetProperty("attributes", out var attributes) &&
+                    attributes.TryGetProperty("upn", out var upnValue) &&
+                    string.Equals(upnValue.GetString(), upn, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
